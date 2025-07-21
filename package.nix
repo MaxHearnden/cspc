@@ -7,11 +7,13 @@ rustPlatform.buildRustPackage {
   src = builtins.path {
     path = ./.;
     name = "source";
-    filter = nix-gitignore.gitignoreFilterSourcePure (_: _: true) [
+    filter = nix-gitignore.gitignoreFilterPure (_: _: true) [
       "*.nix"
       "flake.lock"
     ] ./.;
   };
   
   cargoLock.lockFile = ./Cargo.lock;
+
+  meta.mainProgram = "cspc";
 }
