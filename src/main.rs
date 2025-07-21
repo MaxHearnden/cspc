@@ -39,14 +39,14 @@ enum MaybeVec<A> {
     Singleton(A),
 }
 
-enum MaybeVecIter<A> {
-    Vector(<Vec<A> as IntoIterator>::IntoIter),
-    Singleton(std::iter::Once<A>),
+enum MaybeVecIter<'a, A> {
+    Vector(<&'a Vec<A> as IntoIterator>::IntoIter),
+    Singleton(std::iter::Once<&'a A>),
 }
 
-impl<A> Iterator for MaybeVecIter<A> {
-    type Item = A;
-    fn next(&mut self) -> Option<A> {
+impl<'a, A> Iterator for MaybeVecIter<'a, A> {
+    type Item = &'a A;
+    fn next(&mut self) -> Option<&'a A> {
         match self {
             MaybeVecIter::Vector(v) => v.next(),
             MaybeVecIter::Singleton(s) => s.next(),
@@ -54,13 +54,39 @@ impl<A> Iterator for MaybeVecIter<A> {
     }
 }
 
-impl<A> IntoIterator for MaybeVec<A> {
+enum MaybeVecIntoIter<A> {
+    Vector(<Vec<A> as IntoIterator>::IntoIter),
+    Singleton(std::iter::Once<A>),
+}
+
+impl<A> Iterator for MaybeVecIntoIter<A> {
     type Item = A;
-    type IntoIter = MaybeVecIter<A>;
+    fn next(&mut self) -> Option<A> {
+        match self {
+            MaybeVecIntoIter::Vector(v) => v.next(),
+            MaybeVecIntoIter::Singleton(s) => s.next(),
+        }
+    }
+}
+
+impl<'a, A> IntoIterator for &'a MaybeVec<A> {
+    type Item = &'a A;
+    type IntoIter = MaybeVecIter<'a, A>;
     fn into_iter(self) -> Self::IntoIter {
         match self {
-            MaybeVec::Vector(v) => MaybeVecIter::Vector(v.into_iter()),
+            MaybeVec::Vector(v) => MaybeVecIter::Vector((&v).into_iter()),
             MaybeVec::Singleton(s) => MaybeVecIter::Singleton(std::iter::once(s)),
+        }
+    }
+}
+
+impl<A> IntoIterator for MaybeVec<A> {
+    type Item = A;
+    type IntoIter = MaybeVecIntoIter<A>;
+    fn into_iter(self) -> Self::IntoIter {
+        match self {
+            MaybeVec::Vector(v) => MaybeVecIntoIter::Vector(v.into_iter()),
+            MaybeVec::Singleton(s) => MaybeVecIntoIter::Singleton(std::iter::once(s)),
         }
     }
 }
