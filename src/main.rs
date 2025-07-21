@@ -12,7 +12,7 @@ enum CspDirective {
     #[serde(rename = "none")]
     CSPNone,
     Directive(String),
-    Prefixed(BTreeMap<String, Vec<CspDirective>>),
+    Prefixed(BTreeMap<String, MaybeVec<CspDirective>>),
 }
 
 fn flatten_csp(prefix: &str, directive: &CspDirective) -> Vec<String> {
